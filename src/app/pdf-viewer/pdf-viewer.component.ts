@@ -304,7 +304,6 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
     this.pdfMultiPageLinkService.setViewer(this.pdfMultiPageViewer);
     this.pdfMultiPageFindController = new PDFJSViewer.PDFFindController({pdfViewer: this.pdfMultiPageViewer});
     this.pdfMultiPageViewer.setFindController(this.pdfMultiPageFindController);
-
   }
 
   private setupSinglePageViewer() {
