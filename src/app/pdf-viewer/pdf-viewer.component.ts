@@ -4,9 +4,9 @@
 import {
   Component, Input, Output, ElementRef, EventEmitter, OnChanges, SimpleChanges, OnInit, HostListener, OnDestroy
 } from '@angular/core';
-import {PDFDocumentProxy, PDFViewerParams, PDFPageProxy, PDFSource, PDFProgressData, PDFPromise} from 'pdfjs-dist';
+import { PDFDocumentProxy, PDFViewerParams, PDFPageProxy, PDFSource, PDFProgressData, PDFPromise } from 'pdfjs-dist';
 
-import {createEventBus} from '../utils/event-bus-utils';
+import { createEventBus } from '../utils/event-bus-utils';
 
 let PDFJS: any;
 let PDFJSViewer: any;
@@ -260,7 +260,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
       }
       if ('page' in changes) {
         // New form of page changing: The viewer will now jump to the specified page when it is changed.
-        // This behavior is introducedby using the PDFSinglePageViewer
+        // This behavior is introduced by using the PDFSinglePageViewer
         this.getCurrentViewer().scrollPageIntoView({pageNumber: this._page});
       }
 
