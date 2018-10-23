@@ -255,7 +255,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
         this.close().then(() => {
           this.loadPDF();
         });
-      } else {
+      } else if (this._pdf) {
         this.update();
       }
     } else if (this._pdf) {
