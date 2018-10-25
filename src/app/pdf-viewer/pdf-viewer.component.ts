@@ -74,6 +74,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
   @Input()
   src: string | Uint8Array | PDFSource;
   private pdfLoadingTask: any;
+  private updateSizeObserver: MutationObserver;
 
   @Input('c-maps-url')
   set cMapsUrl(cMapsUrl: string) {
@@ -206,7 +207,9 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this._pdf) {
-      this._pdf.destroy();
+      this.close().then(() => {
+        this._pdf.destroy();
+      });
     }
   }
 
@@ -278,6 +281,27 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   public updateSize() {
+    if (!this.element.nativeElement.offsetParent) {
+      // If offsetParent is not set, we have to observe changes to nativeElement to react with a updateSize() when it is visible
+      // (offsetParent is set).
+      if (this.updateSizeObserver) {
+        // There is previous instance of updateSizeObserver -> disconnect it to not trigger updateSize() twice
+        this.updateSizeObserver.disconnect();
+      }
+      this.updateSizeObserver = new MutationObserver(_ => {
+        this.updateSize();
+      });
+      const config = {subtree: true, childList: true};
+      this.updateSizeObserver.observe(this.element.nativeElement, config);
+      return;
+    }
+
+    if (this.updateSizeObserver) {
+      // At this point updateSize() will have the correct result -> we don't need the updateSizeObserver anymore
+      this.updateSizeObserver.disconnect();
+      this.updateSizeObserver = null;
+    }
+
     const currentViewer = this.getCurrentViewer();
     this._pdf.getPage(currentViewer.currentPageNumber).then((page: PDFPageProxy) => {
       const viewport = page.getViewport(this._zoom, this._rotation);
@@ -456,13 +480,13 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
       this.pdfSinglePageLinkService.setDocument(null);
 
       this.pdfMultiPageViewer.setDocument(this._pdf);
-      this.pdfMultiPageLinkService.setDocument(this._pdf, null);
+      this.pdfMultiPageLinkService.setDocument(this._pdf);
     } else {
       this.pdfMultiPageViewer.setDocument(null);
       this.pdfMultiPageLinkService.setDocument(null);
 
       this.pdfSinglePageViewer.setDocument(this._pdf);
-      this.pdfSinglePageLinkService.setDocument(this._pdf, null);
+      this.pdfSinglePageLinkService.setDocument(this._pdf);
     }
 
   }
