@@ -2,9 +2,19 @@
  * Created by vadimdez on 21/06/16.
  */
 import {
-  Component, Input, Output, ElementRef, EventEmitter, OnChanges, SimpleChanges, OnInit, HostListener, OnDestroy
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges
 } from '@angular/core';
-import {PDFDocumentProxy, PDFViewerParams, PDFPageProxy, PDFSource, PDFProgressData, PDFPromise} from 'pdfjs-dist';
+import {PDFDocumentProxy, PDFPageProxy, PDFProgressData, PDFPromise, PDFSource, PDFViewerParams} from 'pdfjs-dist';
 
 import {createEventBus} from '../utils/event-bus-utils';
 
@@ -37,7 +47,7 @@ export enum RenderTextMode {
   styleUrls: ['./pdf-viewer.component.scss']
 })
 
-export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
+export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy, AfterViewInit {
   static CSS_UNITS: number = 96.0 / 72.0;
 
   private pdfMultiPageViewer: any;
@@ -74,7 +84,6 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
   @Input()
   src: string | Uint8Array | PDFSource;
   private pdfLoadingTask: any;
-  private updateSizeObserver: MutationObserver;
 
   @Input('c-maps-url')
   set cMapsUrl(cMapsUrl: string) {
@@ -198,21 +207,6 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
 
   }
 
-  ngOnInit() {
-    if (!isSSR()) {
-      this.setupMultiPageViewer();
-      this.setupSinglePageViewer();
-    }
-  }
-
-  ngOnDestroy() {
-    if (this._pdf) {
-      this.close().then(() => {
-        this._pdf.destroy();
-      });
-    }
-  }
-
   @HostListener('window:resize', [])
   public onPageResize() {
     if (!this._canAutoResize || !this._pdf) {
@@ -248,6 +242,27 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
     return this._showAll ? this.pdfMultiPageFindController : this.pdfSinglePageFindController;
   }
 
+  ngOnInit() {
+    if (!isSSR()) {
+      this.setupMultiPageViewer();
+      this.setupSinglePageViewer();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this._pdf) {
+      this.close().then(() => {
+        this._pdf.destroy();
+      });
+    }
+  }
+
+  ngAfterViewInit() {
+    if (this._pdf) {
+      this.updateSize();
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (isSSR()) {
       return;
@@ -281,27 +296,6 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   public updateSize() {
-    if (!this.element.nativeElement.offsetParent) {
-      // If offsetParent is not set, we have to observe changes to nativeElement to react with a updateSize() when it is visible
-      // (offsetParent is set).
-      if (this.updateSizeObserver) {
-        // There is previous instance of updateSizeObserver -> disconnect it to not trigger updateSize() twice
-        this.updateSizeObserver.disconnect();
-      }
-      this.updateSizeObserver = new MutationObserver(_ => {
-        this.updateSize();
-      });
-      const config = {attributeFilter: ['offsetParent']};
-      this.updateSizeObserver.observe(this.element.nativeElement, config);
-      return;
-    }
-
-    if (this.updateSizeObserver) {
-      // At this point updateSize() will have the correct result -> we don't need the updateSizeObserver anymore
-      this.updateSizeObserver.disconnect();
-      this.updateSizeObserver = null;
-    }
-
     const currentViewer = this.getCurrentViewer();
     this._pdf.getPage(currentViewer.currentPageNumber).then((page: PDFPageProxy) => {
       const viewport = page.getViewport(this._zoom, this._rotation);
