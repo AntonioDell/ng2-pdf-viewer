@@ -291,7 +291,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
       this.updateSizeObserver = new MutationObserver(_ => {
         this.updateSize();
       });
-      const config = {subtree: true, childList: true};
+      const config = {attributeFilter: ['offsetParent']};
       this.updateSizeObserver.observe(this.element.nativeElement, config);
       return;
     }
