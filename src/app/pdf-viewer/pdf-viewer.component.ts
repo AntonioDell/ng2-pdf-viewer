@@ -208,7 +208,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
   ngOnDestroy() {
     if (this._pdf) {
       this.close().then(() => {
-        this._pdf.destroy();
+        console.log('Viewer destroyed');
       });
     }
   }
@@ -499,6 +499,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
     this.pdfLoadingTask = null;
 
     if (this._pdf) {
+      this._pdf.destroy();
       this._pdf = null;
 
       this.pdfFindController.reset();
