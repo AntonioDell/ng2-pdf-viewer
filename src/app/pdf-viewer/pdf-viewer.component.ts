@@ -2,7 +2,6 @@
  * Created by vadimdez on 21/06/16.
  */
 import {
-  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
@@ -47,7 +46,7 @@ export enum RenderTextMode {
   styleUrls: ['./pdf-viewer.component.scss']
 })
 
-export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy, AfterViewInit {
+export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy {
   static CSS_UNITS: number = 96.0 / 72.0;
 
   private pdfMultiPageViewer: any;
@@ -207,6 +206,21 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy, AfterVi
 
   }
 
+  ngOnInit() {
+    if (!isSSR()) {
+      this.setupMultiPageViewer();
+      this.setupSinglePageViewer();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this._pdf) {
+      this.close().then(() => {
+        console.log('Viewer destroyed');
+      });
+    }
+  }
+
   @HostListener('window:resize', [])
   public onPageResize() {
     if (!this._canAutoResize || !this._pdf) {
@@ -240,27 +254,6 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy, AfterVi
 
   get pdfFindController(): any {
     return this._showAll ? this.pdfMultiPageFindController : this.pdfSinglePageFindController;
-  }
-
-  ngOnInit() {
-    if (!isSSR()) {
-      this.setupMultiPageViewer();
-      this.setupSinglePageViewer();
-    }
-  }
-
-  ngOnDestroy() {
-    if (this._pdf) {
-      this.close().then(() => {
-        this._pdf.destroy();
-      });
-    }
-  }
-
-  ngAfterViewInit() {
-    if (this._pdf) {
-      this.updateSize();
-    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -493,6 +486,7 @@ export class PdfViewerComponent implements OnChanges, OnInit, OnDestroy, AfterVi
     this.pdfLoadingTask = null;
 
     if (this._pdf) {
+      this._pdf.destroy();
       this._pdf = null;
 
       this.pdfFindController.reset();
